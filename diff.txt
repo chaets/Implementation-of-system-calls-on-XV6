@@ -1,0 +1,152 @@
+diff -uw /home/chetan/xv6/defs.h /home/chetan/xv6_1/xv6/defs.h
+--- /home/chetan/xv6/defs.h	2017-10-07 19:36:08.473774826 -0500
++++ /home/chetan/xv6_1/xv6/defs.h	2017-10-05 13:02:42.494369741 -0500
+@@ -116,7 +116,6 @@
+ int             wait(void);
+ void            wakeup(void*);
+ void            yield(void);
+-int				cgps(void);
+ 
+ // swtch.S
+ void            swtch(struct context**, struct context*);
+Common subdirectories: /home/chetan/xv6/.git and /home/chetan/xv6_1/xv6/.git
+diff -uw /home/chetan/xv6/Makefile /home/chetan/xv6_1/xv6/Makefile
+--- /home/chetan/xv6/Makefile	2017-10-03 18:00:28.426478236 -0500
++++ /home/chetan/xv6_1/xv6/Makefile	2017-10-05 13:02:42.490369691 -0500
+@@ -169,7 +169,6 @@
+ 	_stressfs\
+ 	_usertests\
+ 	_wc\
+-	_ps\
+ 	_zombie\
+ 
+ fs.img: mkfs README $(UPROGS)
+@@ -239,7 +238,7 @@
+ 
+ EXTRA=\
+ 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
+-	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c ps.c zombie.c\
++	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
+ 	printf.c umalloc.c\
+ 	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+ 	.gdbinit.tmpl gdbutil\
+diff -uw /home/chetan/xv6/proc.c /home/chetan/xv6_1/xv6/proc.c
+--- /home/chetan/xv6/proc.c	2017-10-07 11:51:22.708578522 -0500
++++ /home/chetan/xv6_1/xv6/proc.c	2017-10-05 13:02:42.502369842 -0500
+@@ -456,28 +456,4 @@
+   }
+ }
+ 
+-int
+-cgps(){
+-struct proc *p;
+-sti();
+ 
+-  acquire(&ptable.lock);
+-  cprintf("name \t pid \t state \t \t memory \t \n");
+-  for (p= ptable.proc; p<&ptable.proc[NPROC]; p++)
+-  {
+-  	if (p->state==SLEEPING)
+-  		cprintf("%s \t %d \t SLEEPING \t %d KB \n ", p->name, p->pid, p->sz/1024);
+-  	else if (p->state==RUNNING)
+-  		cprintf("%s \t %d \t RUNNING \t %d KB \n ", p->name, p->pid, p->sz/1024);
+-  	else if (p->state==RUNNABLE)
+-  		cprintf("%s \t %d \t RUNNABLE \t %d KB \n ", p->name, p->pid, p->sz/1024);
+-    else if (p->state==EMBRYO)
+-      cprintf("%s \t %d \t EMBRYO \t %d KB \n ", p->name, p->pid, p->sz/1024);
+-    else if (p->state==ZOMBIE)
+-      cprintf("%s \t %d \t ZOMBIE \t %d KB \n ", p->name, p->pid, p->sz/1024);
+-      
+-  }
+-
+-  release(&ptable.lock);
+-  return 22;
+-}
+diff -uw /home/chetan/xv6/ps.c /home/chetan/xv6_1/xv6/ps.c
+--- /home/chetan/xv6/ps.c	2017-10-03 17:57:41.972420390 -0500
++++ /home/chetan/xv6_1/xv6/ps.c	2017-10-07 20:56:30.806578286 -0500
+@@ -1,11 +0,0 @@
+-#include "stat.h"
+-#include "types.h"
+-#include "fcntl.h"
+-#include "user.h"
+-
+-int 
+-main(int argc, char *argv[])
+-{
+-cgps();
+-exit();
+-}
+diff -uw /home/chetan/xv6/stat.h /home/chetan/xv6_1/xv6/stat.h
+--- /home/chetan/xv6/stat.h	2017-10-03 18:29:36.748768153 -0500
++++ /home/chetan/xv6_1/xv6/stat.h	2017-10-05 13:02:42.502369842 -0500
+@@ -5,7 +5,7 @@
+ struct stat {
+   short type;  // Type of file
+   int dev;     // File system's disk device
+-  unsigned int ino;    // Inode number
++  uint ino;    // Inode number
+   short nlink; // Number of links to file
+-  unsigned int size;   // Size of file in bytes
++  uint size;   // Size of file in bytes
+ };
+diff -uw /home/chetan/xv6/syscall.c /home/chetan/xv6_1/xv6/syscall.c
+--- /home/chetan/xv6/syscall.c	2017-10-03 17:40:30.427247693 -0500
++++ /home/chetan/xv6_1/xv6/syscall.c	2017-10-05 13:02:42.502369842 -0500
+@@ -98,7 +98,6 @@
+ extern int sys_wait(void);
+ extern int sys_write(void);
+ extern int sys_uptime(void);
+-extern int sys_cgps(void);
+ 
+ static int (*syscalls[])(void) = {
+ [SYS_fork]    sys_fork,
+@@ -116,7 +115,6 @@
+ [SYS_sleep]   sys_sleep,
+ [SYS_uptime]  sys_uptime,
+ [SYS_open]    sys_open,
+-[SYS_cgps]    sys_cgps,
+ [SYS_write]   sys_write,
+ [SYS_mknod]   sys_mknod,
+ [SYS_unlink]  sys_unlink,
+diff -uw /home/chetan/xv6/syscall.h /home/chetan/xv6_1/xv6/syscall.h
+--- /home/chetan/xv6/syscall.h	2017-10-03 17:18:37.890997345 -0500
++++ /home/chetan/xv6_1/xv6/syscall.h	2017-10-05 13:02:42.502369842 -0500
+@@ -20,4 +20,3 @@
+ #define SYS_link   19
+ #define SYS_mkdir  20
+ #define SYS_close  21
+-#define SYS_cgps   22
+Only in /home/chetan/xv6: .syscall.h.swo
+Only in /home/chetan/xv6: .syscall.h.swp
+diff -uw /home/chetan/xv6/sysproc.c /home/chetan/xv6_1/xv6/sysproc.c
+--- /home/chetan/xv6/sysproc.c	2017-10-03 18:05:27.790163488 -0500
++++ /home/chetan/xv6_1/xv6/sysproc.c	2017-10-05 13:02:42.502369842 -0500
+@@ -88,8 +88,3 @@
+   release(&tickslock);
+   return xticks;
+ }
+-int
+-sys_cgps(void)
+-{
+-return cgps();
+-}
+diff -uw /home/chetan/xv6/user.h /home/chetan/xv6_1/xv6/user.h
+--- /home/chetan/xv6/user.h	2017-10-03 17:23:45.274242985 -0500
++++ /home/chetan/xv6_1/xv6/user.h	2017-10-05 13:02:42.502369842 -0500
+@@ -22,7 +22,6 @@
+ char* sbrk(int);
+ int sleep(int);
+ int uptime(void);
+-int cgps(void);
+ 
+ // ulib.c
+ int stat(char*, struct stat*);
+diff -uw /home/chetan/xv6/usys.S /home/chetan/xv6_1/xv6/usys.S
+--- /home/chetan/xv6/usys.S	2017-10-03 17:34:37.958288739 -0500
++++ /home/chetan/xv6_1/xv6/usys.S	2017-10-05 13:02:42.502369842 -0500
+@@ -29,4 +29,3 @@
+ SYSCALL(sbrk)
+ SYSCALL(sleep)
+ SYSCALL(uptime)
+-SYSCALL(cgps)
